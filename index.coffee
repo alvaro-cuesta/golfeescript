@@ -49,20 +49,41 @@ BUILTINS =
     @stack.push switch typeOf a
       when 'int' then @stack[@stack.length - a - 1]
       when 'array' then a.sort()
-      when 'string' then a.split('').sort().join()
-      when 'block' then @stack.pop().sort a
+      when 'string' then a.split('').sort().join('')
+      when 'block' then throw '$(block) not implemented'
 
   '+': ->
     [b, a] = coerce @stack.pop(), @stack.pop()
 
     @stack.push switch typeOf a
-      when 'array' then a.push x for x in b
+      when 'array' then a.concat b
       when 'block' then makeBlock a.code + b.code
       else a + b
 
   '-': ->
-    a = @stack.pop()
-    @stack.push @stack.pop() + a
+    [b, a] = coerce @stack.pop(), @stack.pop()
+
+    @stack.push switch typeOf a
+      when 'int' then a - b
+      else throw "- (#{typeOf a}) not implemented"
+
+  '*': ->
+    throw '* not implemented'
+
+  '/': ->
+    throw '/ not implemented'
+
+  '%': ->
+    throw '% not implemented'
+
+  '|': ->
+    throw '| not implemented'
+
+  '&': ->
+    throw '& not implemented'
+
+  '^': ->
+    throw '^ not implemented'
 
   '[': ->
     @lb.push @stack.length
@@ -72,6 +93,79 @@ BUILTINS =
     array = @stack[size..]
     @stack = if size then @stack[..size] else []
     @stack.push array
+
+  '\\': ->
+    throw '\\ not implemented'
+
+  ';' ->
+    @stack.pop()
+
+  '<': ->
+    throw '< not implemented'
+
+  '>': ->
+    throw '> not implemented'
+
+  '=': ->
+    throw '= not implemented'
+
+  ',': ->
+    throw ', not implemented'
+
+  '.': ->
+    @stack.push @stack[@stack.length - 1]
+
+  '?': ->
+    throw '? not implemented'
+
+  '(': ->
+    throw '| not implemented'
+
+  ')': ->
+    throw '| not implemented'
+
+  'and': ->
+    throw 'and not implemented'
+
+  'or': ->
+    throw 'or not implemented'
+
+  'xor': ->
+    throw 'xor not implemented'
+
+  'print': ->
+    console.log toString
+
+  'p': makeBlock '`puts'
+
+  'n': '\n'
+
+  'puts': makeBlock 'print n print'
+
+  # TODO: what about neg and such
+  'rand': ->
+    @stack.push ~~ Math.random() * @stack.pop()
+
+  'do': ->
+    throw 'do not implemented'
+
+  'while': ->
+    throw 'while not implemented'
+
+  'until': ->
+    throw 'until not implemented'
+
+  'if': ->
+    throw 'if not implemented'
+
+  'abs': ->
+    throw 'abs not implemented'
+
+  'zip': ->
+    throw 'zip not implemented'
+
+  'base': ->
+    throw 'base not implemented'
 
 
 # LANGUAGE HELPER FUNCTIONS #
