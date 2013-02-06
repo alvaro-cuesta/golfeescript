@@ -3,6 +3,8 @@
 #  check with golfscript output
 #  lb for arrays should decrement with pops
 #  state kinda sucks (crappy references!)
+#  :
+#  do not console.log prints, put in buffer
 
 coffee = require 'coffee-script'
 
@@ -15,7 +17,7 @@ log = -> console.log.apply this, arguments if DEBUG
 # CONSTANTS #
 
 REGEX = /[a-zA-Z_][a-zA-Z0-9_]*|'(?:\\.|[^'])*'?|"(?:\\.|[^"])*"?|-?[0-9]+|#[^\n\r]*|./gm #'
-BUILTINS =
+BUILTINS =  # in order as they appear on http://www.golfscript.com/golfscript/builtin.html
   '~': ->
     a = @stack.pop()
 
@@ -31,12 +33,10 @@ BUILTINS =
   '!': ->
     a = @stack.pop()
 
-    val = switch typeOf a
+    @stack.push ~~ not switch typeOf a
       when 'int' then val = a
       when 'block' then a.code.length
       else a.length
-
-    @stack.push if not val then 1 else 0
 
   '@': ->
     [a, b, c] = [@stack.pop(), @stack.pop(), @stack.pop()]
