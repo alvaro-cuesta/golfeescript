@@ -6,10 +6,13 @@
 
 coffee = require 'coffee-script'
 
-DEBUG = true
+# DEBUG #
 
-log = ->
-  console.log.apply this, arguments if DEBUG
+DEBUG = true
+log = -> console.log.apply this, arguments if DEBUG
+
+
+# CONSTANTS #
 
 REGEX = /[a-zA-Z_][a-zA-Z0-9_]*|'(?:\\.|[^'])*'?|"(?:\\.|[^"])*"?|-?[0-9]+|#[^\n\r]*|./gm #'
 BUILTINS =
@@ -158,6 +161,9 @@ makeBlock = (code) ->
   block.code = parsed.join ''
 
   block
+
+
+# EXPORTS #
 
 module.exports = golfee =
   REGEX: REGEX
