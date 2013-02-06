@@ -95,7 +95,7 @@ BUILTINS =  # in order as they appear on http://www.golfscript.com/golfscript/bu
     @stack.push array
 
   '\\': ->
-    throw '\\ not implemented'
+    @stack.push for x in [@stack.pop(), @stack.pop()]
 
   ';' ->
     @stack.pop()
@@ -110,7 +110,13 @@ BUILTINS =  # in order as they appear on http://www.golfscript.com/golfscript/bu
     throw '= not implemented'
 
   ',': ->
-    throw ', not implemented'
+    a = @stack.pop()
+
+    @stack.push switch typeOf a
+      when 'int' then [0...a]
+      when 'array' then a.length
+      when 'string' then throw ", is not defined for strings"
+      when 'block' the throw ", (block) not implemented"
 
   '.': ->
     @stack.push @stack[@stack.length - 1]
@@ -119,10 +125,20 @@ BUILTINS =  # in order as they appear on http://www.golfscript.com/golfscript/bu
     throw '? not implemented'
 
   '(': ->
-    throw '| not implemented'
+    a = @stack.pop()
+
+    @stack.push switch typeOf a
+      when 'int' then a - 1
+      when 'array' then a.shift(); a
+      else "( is not defined for #{typeOf a}"
 
   ')': ->
-    throw '| not implemented'
+    a = @stack.pop()
+
+    @stack.push switch typeOf a
+      when 'int' then a + 1
+      when 'array' then a.pop(); a
+      else ") is not defined for #{typeOf a}"
 
   'and': ->
     throw 'and not implemented'
@@ -159,7 +175,11 @@ BUILTINS =  # in order as they appear on http://www.golfscript.com/golfscript/bu
     throw 'if not implemented'
 
   'abs': ->
-    throw 'abs not implemented'
+    a = @stack.pop()
+
+    @stack.push switch typeOf a
+      when 'int' then Math.abs a
+      else "abs is not defined for #{typeOf a}"
 
   'zip': ->
     throw 'zip not implemented'
