@@ -1,5 +1,4 @@
 # TODO
-#  coerce
 #  rest of builtins
 #  check with golfscript output
 #  lb for arrays should decrement with pops
@@ -53,8 +52,12 @@ BUILTINS =
       when 'block' then @stack.pop().sort a
 
   '+': ->
-    a = @stack.pop()
-    @stack.push @stack.pop() + a
+    [b, a] = coerce @stack.pop(), @stack.pop()
+
+    @stack.push switch typeOf a
+      when 'array' then a.push x for x in b
+      when 'block' then makeBlock a.code + b.code
+      else a + b
 
   '-': ->
     a = @stack.pop()
@@ -86,6 +89,17 @@ toString = (e) ->
       elements = (toString x for x in e)
       '[' + elements.join(' ') + ']'
     else throw "Unknown string representation for #{e}"
+
+coerce = (a, b) ->
+  switch typeOf a
+    when 'block' then return [a, makeBlock b]
+    when 'string' then return [a, '' + b] if typeOf(b) != 'block'
+    when 'array' then switch typeOf b
+      when 'array' then return [a, b]
+      when 'int' then return [a, [b]]
+    when 'int' then return [a, b] if typeOf(b) == 'int'
+
+  coerce(b, a).reverse()
 
 makeBlock = (code) ->
 
@@ -150,6 +164,7 @@ module.exports = golfee =
   makeBlock: makeBlock
   typeOf: typeOf
   toString: toString
+  coerce: coerce
 
   parse: (code) ->
     code.match golfee.REGEX
