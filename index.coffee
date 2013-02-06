@@ -41,9 +41,7 @@ BUILTINS =
   '@': ->
     [a, b, c] = [@stack.pop(), @stack.pop(), @stack.pop()]
 
-    @stack.push b
-    @stack.push a
-    @stack.push c
+    @stack.push x for x in [b, a ,c]
 
   '$': ->
     a = @stack.pop()
