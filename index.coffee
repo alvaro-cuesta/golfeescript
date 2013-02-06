@@ -14,9 +14,103 @@ DEBUG = true
 log = -> console.log.apply this, arguments if DEBUG
 
 
-# CONSTANTS #
+# LANGUAGE DEFINITIONS #
 
 REGEX = /[a-zA-Z_][a-zA-Z0-9_]*|'(?:\\.|[^'])*'?|"(?:\\.|[^"])*"?|-?[0-9]+|#[^\n\r]*|./gm #'
+
+parse = (code) ->
+  code.match REGEX
+
+typeOf = (x) ->
+  switch Object.prototype.toString.call x
+    when '[object Number]' then 'int'
+    when '[object String]' then 'string'
+    when '[object Function]' then 'block'
+    when '[object Array]' then 'array'
+    else throw "Unknown type for #{x}"
+
+toString = (x) ->
+  switch typeOf x
+    when 'int' then x.toString()
+    when 'string' then '"' + x.toString() + '"'
+    when 'block' then '{' + x.code + '}'
+    when 'array' then '[' + (toString e for e in x).join(' ') + ']'
+    else throw "Unknown string representation for #{x}"
+
+coerce = (a, b) ->
+  switch typeOf a
+    when 'block' then return [a, makeBlock b]
+    when 'string' then return [a, '' + b] if typeOf(b) != 'block'
+    when 'array' then switch typeOf b
+      when 'array' then return [a, b]
+      when 'int' then return [a, [b]]
+    when 'int' then return [a, b] if typeOf(b) == 'int'
+
+  coerce(b, a).reverse()
+
+makeBlock = (code) ->
+
+  parsed = parse switch typeOf code
+    when 'int' then code.toString()
+    when 'string' then code
+    when 'array' then code
+    when 'block' then code.code
+    else throw "Cannot parse #{code}"
+
+  # Return the block
+  block = (stack, variables) ->
+
+    state =
+      variables: variables
+      stack: stack
+      lb: []
+
+    log 'PARSED:', parsed[..]
+
+    while parsed[0]?
+      token = parsed.shift()
+      log 'TOKEN:', token
+
+      # Tokens built in syntax
+      if token == '{'
+        end = parsed.indexOf '}'
+        stack.push makeBlock(parsed[0...end])
+        parsed = parsed[end+1..]
+      else if token == ':'
+        name = parsed.shift()
+        state.variables[name] = state.stack[state.stack.length - 1]
+      else  # Not built in syntax
+        val = variables[token]
+
+        log 'VAL:', val
+
+        # Is it a variable
+        if val?
+          log 'FOUND'
+
+          # Execute if it's a block
+          if typeOf(val) == 'block'
+            val.apply state
+          else
+            stack.push val
+        else  # Not a variable
+          log 'NOT_FOUND'
+          b = eval token
+          stack.push b if b?
+
+      log 'STACK:', stack
+
+    log 'END STACK:', stack
+
+    console.log stack.join('') if stack?
+
+  block.code = parsed.join ''
+
+  block
+
+
+# BUILT IN VARIABLES #
+
 BUILTINS =  # in order as they appear on http://www.golfscript.com/golfscript/builtin.html
   '~': ->
     a = @stack.pop()
@@ -95,9 +189,9 @@ BUILTINS =  # in order as they appear on http://www.golfscript.com/golfscript/bu
     @stack.push array
 
   '\\': ->
-    @stack.push for x in [@stack.pop(), @stack.pop()]
+    @stack.push x for x in [@stack.pop(), @stack.pop()]
 
-  ';' ->
+  ';': ->
     @stack.pop()
 
   '<': ->
@@ -116,7 +210,7 @@ BUILTINS =  # in order as they appear on http://www.golfscript.com/golfscript/bu
       when 'int' then [0...a]
       when 'array' then a.length
       when 'string' then throw ", is not defined for strings"
-      when 'block' the throw ", (block) not implemented"
+      when 'block' then throw ", (block) not implemented"
 
   '.': ->
     @stack.push @stack[@stack.length - 1]
@@ -188,105 +282,17 @@ BUILTINS =  # in order as they appear on http://www.golfscript.com/golfscript/bu
     throw 'base not implemented'
 
 
-# LANGUAGE HELPER FUNCTIONS #
-
-typeOf = (x) ->
-  switch Object.prototype.toString.call x
-    when '[object Number]' then 'int'
-    when '[object String]' then 'string'
-    when '[object Function]' then 'block'
-    when '[object Array]' then 'array'
-    else throw "Unknown type for #{x}"
-
-toString = (x) ->
-  switch typeOf x
-    when 'int' then x.toString()
-    when 'string' then '"' + x.toString() + '"'
-    when 'block' then '{' + x.code + '}'
-    when 'array' then '[' + (toString e for e in x).join(' ') + ']'
-    else throw "Unknown string representation for #{x}"
-
-coerce = (a, b) ->
-  switch typeOf a
-    when 'block' then return [a, makeBlock b]
-    when 'string' then return [a, '' + b] if typeOf(b) != 'block'
-    when 'array' then switch typeOf b
-      when 'array' then return [a, b]
-      when 'int' then return [a, [b]]
-    when 'int' then return [a, b] if typeOf(b) == 'int'
-
-  coerce(b, a).reverse()
-
-makeBlock = (code) ->
-
-  parsed = golfee.parse switch typeOf code
-    when 'int' then code.toString()
-    when 'string' then code
-    when 'array' then code
-    when 'block' then code.code
-    else throw "Cannot parse #{code}"
-
-  # Return the block
-  block = (stack, variables) ->
-
-    state =
-      variables: variables
-      stack: stack
-      lb: []
-
-    log 'PARSED:', parsed[..]
-
-    while parsed[0]?
-      token = parsed.shift()
-      log 'TOKEN:', token
-
-      # Tokens built in syntax
-      if token == '{'
-        end = parsed.indexOf '}'
-        stack.push makeBlock(parsed[0...end])
-        parsed = parsed[end+1..]
-      else if token == ':'
-
-      else  # Not built in syntax
-        val = variables[token]
-
-        log 'VAL:', val
-
-        # Is it a variable
-        if val?
-          log 'FOUND'
-
-          # Execute if it's a block
-          if typeOf(val) == 'block'
-            val.apply state
-          else
-            stack.push val
-        else  # Not a variable
-          log 'NOT_FOUND'
-          b = eval token
-          stack.push b if b?
-
-      log 'STACK:', stack
-
-    log 'END STACK:', stack
-
-  block.code = parsed.join ''
-
-  block
-
-
 # EXPORTS #
 
 module.exports = golfee =
   REGEX: REGEX
   BUILTINS: BUILTINS
 
+  parse: parse
   makeBlock: makeBlock
   typeOf: typeOf
   toString: toString
   coerce: coerce
 
-  parse: (code) ->
-    code.match golfee.REGEX
   run: (code, stack = [], variables = BUILTINS) ->  # TODO: copy!
     makeBlock(code) stack, variables
