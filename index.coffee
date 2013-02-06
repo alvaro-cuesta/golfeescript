@@ -72,23 +72,24 @@ BUILTINS =
     @stack = if size then @stack[..size] else []
     @stack.push array
 
-typeOf = (e) ->
-  switch Object.prototype.toString.call e
+
+# LANGUAGE HELPER FUNCTIONS #
+
+typeOf = (x) ->
+  switch Object.prototype.toString.call x
     when '[object Number]' then 'int'
     when '[object String]' then 'string'
     when '[object Function]' then 'block'
     when '[object Array]' then 'array'
-    else throw "Unknown type for #{e}"
+    else throw "Unknown type for #{x}"
 
-toString = (e) ->
-  switch typeOf e
-    when 'int' then e.toString()
-    when 'string' then '"' + e.toString() + '"'
-    when 'block' then e.toString()
-    when 'array'
-      elements = (toString x for x in e)
-      '[' + elements.join(' ') + ']'
-    else throw "Unknown string representation for #{e}"
+toString = (x) ->
+  switch typeOf x
+    when 'int' then x.toString()
+    when 'string' then '"' + x.toString() + '"'
+    when 'block' then '{' + x.code + '}'
+    when 'array' then '[' + (toString e for e in x).join(' ') + ']'
+    else throw "Unknown string representation for #{x}"
 
 coerce = (a, b) ->
   switch typeOf a
@@ -155,7 +156,6 @@ makeBlock = (code) ->
     log 'END STACK:', stack
 
   block.code = parsed.join ''
-  block.toString = -> '{' + block.code + '}'
 
   block
 
