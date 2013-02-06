@@ -34,7 +34,7 @@ BUILTINS =  # in order as they appear on http://www.golfscript.com/golfscript/bu
     a = @stack.pop()
 
     @stack.push ~~ not switch typeOf a
-      when 'int' then val = a
+      when 'int' then a
       when 'block' then a.code.length
       else a.length
 
