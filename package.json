@@ -1,0 +1,21 @@
+{
+  "name": "golfeescript",
+  "version": "0.0.0",
+  "description": "GolfScript implementation in CoffeScript",
+  "main": "index.coffee",
+  "scripts": {
+    "test": "echo NOT IMPLEMENTED"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/alvaro-cuesta/golfeescript.git"
+  },
+  "keywords": [
+    "golfscript"
+  ],
+  "author": "alvaro-cuesta <alvaro-cuesta@GitHub>",
+  "license": "MIT",
+  "dependencies": {
+    "coffee-script": "1.4.x"
+  }
+}
