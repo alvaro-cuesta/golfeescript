@@ -103,9 +103,11 @@ coerce = (a, b) ->
 
 makeBlock = (code) ->
 
-  parsed = switch typeOf code
-    when 'string' then golfee.parse code
+  parsed = golfee.parse switch typeOf code
+    when 'int' then code.toString()
+    when 'string' then code
     when 'array' then code
+    when 'block' then code.code
     else throw "Cannot parse #{code}"
 
   # Return the block
